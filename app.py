@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from flask import Flask, request
 from threading import Thread
@@ -57,21 +58,28 @@ def webhook():
     text = data["message"].get("text", "").strip()
 
     if text.startswith("/start"):
-        send_message(chat_id, "مرحبًا! أرسل رابط الفيديو وعدد المشاهدات المطلوبة بصيغة:\n`رابط_الفيديو عدد_المشاهدات`")
+        send_message(chat_id, "مرحبًا! أرسل رابط الفيديو وعدد المشاهدات المطلوبة بصيغة:\n`رابط_الفيديو عدد_المشاهدات`\nمثال:\n`https://www.youtube.com/watch?v=example 100`")
     elif "youtube.com" in text or "youtu.be" in text:
         try:
-            # تقسيم النص إلى الرابط وعدد المشاهدات
-            parts = text.split()
+            # استخدام regex للتحقق من صحة الرابط
+            parts = text.split(maxsplit=1)
             if len(parts) != 2:
-                raise ValueError("صيغة غير صحيحة!")
+                raise ValueError("صيغة غير صحيحة! تأكد من إرسال الرابط مع عدد المشاهدات.")
 
             video_url, views_count = parts
+            if not re.match(r"(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)[\w-]+", video_url):
+                raise ValueError("الرابط غير صالح! تأكد من استخدام رابط يوتيوب صحيح.")
+
             views_count = int(views_count)
+            if views_count <= 0:
+                raise ValueError("عدد المشاهدات يجب أن يكون رقمًا صحيحًا أكبر من 0.")
 
             send_message(chat_id, f"✅ تم بدء زيادة المشاهدات على الفيديو:\n{video_url}\n📈 العدد المطلوب: {views_count}")
 
             # تشغيل عملية المشاهدات في Thread لتجنب تعليق الخادم
             Thread(target=increase_views, args=(video_url, views_count)).start()
+        except ValueError as ve:
+            send_message(chat_id, f"❌ خطأ في الصيغة: {ve}")
         except Exception as e:
             send_message(chat_id, f"❌ حدث خطأ: {e}")
     else:
