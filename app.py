@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import requests
 from flask import Flask, request
 from threading import Thread
@@ -32,16 +33,24 @@ def send_message(chat_id, text):
     except Exception as e:
         print(f"❌ فشل في إرسال الرسالة: {e}")
 
+def get_video_duration(video_url):
+    """محاكاة الحصول على مدة الفيديو."""
+    # في التطبيق الفعلي، استخدم API خاص بـ YouTube لجلب مدة الفيديو
+    # هنا نضع مدة افتراضية (5 دقائق)
+    return 600  # مدة الفيديو بالثواني
+
 def increase_views(video_url, views_count):
     """محاكاة زيادة المشاهدات على فيديو YouTube."""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
+    video_duration = get_video_duration(video_url)
     for i in range(views_count):
         try:
             response = requests.get(video_url, headers=headers)
             if response.status_code == 200:
                 print(f"✅ تمت مشاهدة الفيديو ({i + 1}/{views_count})")
+                time.sleep(video_duration)  # الانتظار لمدة الفيديو
             else:
                 print(f"❌ فشل تحميل الفيديو. رمز الحالة: {response.status_code}")
         except Exception as e:
