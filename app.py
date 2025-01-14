@@ -5,10 +5,21 @@ from threading import Thread
 
 # تعيين القيم من متغيرات البيئة أو وضع القيم مباشرة
 API_TOKEN = os.getenv("API_TOKEN", "ضع_التوكن_هنا")  # يجب وضع توكن البوت هنا
-WEBHOOK_URL = os.getenv("WEBHOOK_URL", "http://localhost:5000")  # رابط الويب هوك
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://your-app-url.com")  # رابط الويب هوك العام (HTTPS مطلوب)
 PORT = int(os.getenv("PORT", 5000))  # المنفذ الافتراضي 5000
 
 app = Flask(__name__)
+
+def set_webhook():
+    """إعداد Webhook للبوت على Telegram."""
+    url = f"https://api.telegram.org/bot{API_TOKEN}/setWebhook"
+    payload = {"url": f"{WEBHOOK_URL}/{API_TOKEN}"}
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        print(f"✅ تم إعداد Webhook بنجاح: {WEBHOOK_URL}/{API_TOKEN}")
+    except Exception as e:
+        print(f"❌ فشل في إعداد Webhook: {e}")
 
 def send_message(chat_id, text):
     """إرسال رسالة إلى مستخدم Telegram."""
@@ -18,7 +29,7 @@ def send_message(chat_id, text):
         response = requests.post(url, json=payload)
         response.raise_for_status()
     except Exception as e:
-        print(f"فشل في إرسال الرسالة: {e}")
+        print(f"❌ فشل في إرسال الرسالة: {e}")
 
 def increase_views(video_url, views_count):
     """محاكاة زيادة المشاهدات على فيديو YouTube."""
@@ -29,11 +40,11 @@ def increase_views(video_url, views_count):
         try:
             response = requests.get(video_url, headers=headers)
             if response.status_code == 200:
-                print(f"تمت مشاهدة الفيديو ({i + 1}/{views_count})")
+                print(f"✅ تمت مشاهدة الفيديو ({i + 1}/{views_count})")
             else:
-                print(f"فشل تحميل الفيديو. رمز الحالة: {response.status_code}")
+                print(f"❌ فشل تحميل الفيديو. رمز الحالة: {response.status_code}")
         except Exception as e:
-            print(f"خطأ أثناء زيادة المشاهدات ({i + 1}): {e}")
+            print(f"❌ خطأ أثناء زيادة المشاهدات ({i + 1}): {e}")
 
 @app.route(f"/{API_TOKEN}", methods=["POST"])
 def webhook():
@@ -70,4 +81,5 @@ def webhook():
 
 if __name__ == "__main__":
     print(f"✅ بدء تشغيل التطبيق على المنفذ {PORT}...")
+    set_webhook()  # إعداد Webhook عند بدء التشغيل
     app.run(host="0.0.0.0", port=PORT)
