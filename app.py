@@ -39,10 +39,6 @@ def send_message(chat_id, text, reply_markup=None):
 def get_video_duration(video_url):
     return 600  # يمكن تغيير هذه القيمة حسب مدة الفيديو الفعلية
 
-def skip_advertisement():
-    print("⏩ Skipping advertisement...")
-    time.sleep(5)  # تأخير لتخطي الإعلان
-
 def increase_views(video_url, views_count, chat_id):
     headers = {"User-Agent": "Mozilla/5.0"}
     video_duration = get_video_duration(video_url)
