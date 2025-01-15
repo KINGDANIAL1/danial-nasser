@@ -39,11 +39,16 @@ def send_message(chat_id, text):
 
 def get_video_duration(video_url):
     """محاكاة الحصول على مدة الفيديو."""
-    # في التطبيق الفعلي، استخدم API خاص بـ YouTube لجلب مدة الفيديو
-    # هنا نضع مدة افتراضية (5 دقائق)
-    return 300  # مدة الفيديو بالثواني
+    return 300  # مدة الفيديو بالثواني (5 دقائق)
 
-def increase_views(video_url, views_count):
+def create_account_for_viewer(chat_id):
+    """محاكاة إنشاء حساب لكل مشاهدة."""
+    # هنا يتم إضافة منطق إنشاء حساب جديد
+    print(f"🔑 إنشاء حساب جديد للمستخدم {chat_id}...")
+    # يمكنك هنا إضافة المزيد من التفاصيل حول عملية إنشاء الحساب
+    send_message(chat_id, "✅ تم إنشاء حسابك بنجاح! استمتع بمشاهدتك.")
+
+def increase_views(video_url, views_count, chat_id):
     """محاكاة زيادة المشاهدات على فيديو YouTube."""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -51,6 +56,8 @@ def increase_views(video_url, views_count):
     video_duration = get_video_duration(video_url)
     for i in range(views_count):
         try:
+            # محاكاة إنشاء حساب للمستخدم عند أول مشاهدة
+            create_account_for_viewer(chat_id)
             response = requests.get(video_url, headers=headers)
             if response.status_code == 200:
                 print(f"✅ تمت مشاهدة الفيديو ({i + 1}/{views_count})")
@@ -90,7 +97,7 @@ def webhook():
             send_message(chat_id, f"✅ تم بدء زيادة المشاهدات على الفيديو:\n{video_url}\n📈 العدد المطلوب: {views_count}")
 
             # تشغيل عملية المشاهدات في Thread لتجنب تعليق الخادم
-            Thread(target=increase_views, args=(video_url, views_count)).start()
+            Thread(target=increase_views, args=(video_url, views_count, chat_id)).start()
         except ValueError as ve:
             send_message(chat_id, f"❌ خطأ في الصيغة: {ve}")
         except Exception as e:
