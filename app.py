@@ -5,10 +5,14 @@ import requests
 from flask import Flask, request
 from threading import Thread
 
-# تعيين القيم من متغيرات البيئة أو وضع القيم مباشرة
-API_TOKEN = os.getenv("API_TOKEN", "ضع_التوكن_هنا")  # يجب وضع توكن البوت هنا
-WEBHOOK_URL = os.getenv("WEBHOOK_URL", "https://your-app-url.com")  # رابط الويب هوك العام (HTTPS مطلوب)
+# تعيين القيم من متغيرات البيئة
+API_TOKEN = os.getenv("API_TOKEN")  # يجب وضع توكن البوت في متغير البيئة
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # رابط الويب هوك العام (HTTPS مطلوب)
 PORT = int(os.getenv("PORT", 5000))  # المنفذ الافتراضي 5000
+
+# التأكد من وجود API_TOKEN و WEBHOOK_URL
+if not API_TOKEN or not WEBHOOK_URL:
+    raise ValueError("يجب تحديد API_TOKEN و WEBHOOK_URL في متغيرات البيئة.")
 
 app = Flask(__name__)
 
@@ -20,7 +24,7 @@ def set_webhook():
         response = requests.post(url, json=payload)
         response.raise_for_status()
         print(f"✅ تم إعداد Webhook بنجاح: {WEBHOOK_URL}/{API_TOKEN}")
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         print(f"❌ فشل في إعداد Webhook: {e}")
 
 def send_message(chat_id, text):
@@ -30,7 +34,7 @@ def send_message(chat_id, text):
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         print(f"❌ فشل في إرسال الرسالة: {e}")
 
 def get_video_duration(video_url):
