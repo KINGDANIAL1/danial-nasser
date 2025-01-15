@@ -28,9 +28,14 @@ def send_message(chat_id, text, reply_markup=None):
         return
     url = f"https://api.telegram.org/bot{API_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown", "reply_markup": reply_markup}
+    
+    # إضافة سجل لتتبع البيانات المرسلة
+    print(f"Sending message to chat_id {chat_id} with payload: {payload}")  # سجل لعرض البيانات المرسلة
+    
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
+        print("✅ Message sent successfully.")
     except Exception as e:
         print(f"❌ Failed to send message: {e}")
 
