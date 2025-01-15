@@ -1,113 +1,110 @@
+# path: webhook_service.py
+
 import os
 import re
 import time
 import requests
 from flask import Flask, request
 from threading import Thread
+from random import uniform, choice
 
-# تعيين القيم من متغيرات البيئة
-API_TOKEN = os.getenv("API_TOKEN")  # يجب وضع توكن البوت في متغير البيئة
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # رابط الويب هوك العام (HTTPS مطلوب)
-PORT = int(os.getenv("PORT", 5000))  # المنفذ الافتراضي 5000
+# Constants for user-agent rotation
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5735.110 Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 10; SM-A205U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5043.102 Mobile Safari/537.36",
+    # Add more user agents as needed
+]
 
-# التأكد من وجود API_TOKEN و WEBHOOK_URL
+# Retrieve environment variables
+API_TOKEN = os.getenv("API_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+PORT = int(os.getenv("PORT", 5000))
+
+# Validate environment variables
 if not API_TOKEN or not WEBHOOK_URL:
-    raise ValueError("يجب تحديد API_TOKEN و WEBHOOK_URL في متغيرات البيئة.")
+    raise ValueError("API_TOKEN and WEBHOOK_URL must be set as environment variables.")
 
 app = Flask(__name__)
 
 def set_webhook():
-    """إعداد Webhook للبوت على Telegram."""
+    """Setup Telegram webhook."""
     url = f"https://api.telegram.org/bot{API_TOKEN}/setWebhook"
     payload = {"url": f"{WEBHOOK_URL}/{API_TOKEN}"}
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
-        print(f"✅ تم إعداد Webhook بنجاح: {WEBHOOK_URL}/{API_TOKEN}")
+        print(f"Webhook successfully set: {WEBHOOK_URL}/{API_TOKEN}")
     except requests.exceptions.RequestException as e:
-        print(f"❌ فشل في إعداد Webhook: {e}")
+        print(f"Error setting webhook: {e}")
 
 def send_message(chat_id, text):
-    """إرسال رسالة إلى مستخدم Telegram."""
+    """Send a message to Telegram user."""
     url = f"https://api.telegram.org/bot{API_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
-        print(f"❌ فشل في إرسال الرسالة: {e}")
+        print(f"Error sending message: {e}")
 
 def get_video_duration(video_url):
-    """محاكاة الحصول على مدة الفيديو."""
-    return 300  # مدة الفيديو بالثواني (5 دقائق)
+    """Simulate fetching video duration."""
+    return 300  # Replace with actual API or algorithm if needed.
+
+def human_like_delay(base_time, variance=0.2):
+    """Introduce human-like random delay."""
+    time.sleep(uniform(base_time * (1 - variance), base_time * (1 + variance)))
 
 def create_account_for_viewer(chat_id):
-    """محاكاة إنشاء حساب لكل مشاهدة."""
-    # هنا يتم إضافة منطق إنشاء حساب جديد
-    print(f"🔑 إنشاء حساب جديد للمستخدم {chat_id}...")
-    # يمكنك هنا إضافة المزيد من التفاصيل حول عملية إنشاء الحساب
-    send_message(chat_id, "✅ تم إنشاء حسابك بنجاح! استمتع بمشاهدتك.")
+    """Simulate creating an account for viewing."""
+    human_like_delay(2)  # Simulates human account creation
+    send_message(chat_id, "Account successfully created. Enjoy viewing!")
 
 def increase_views(video_url, views_count, chat_id):
-    """محاكاة زيادة المشاهدات على فيديو YouTube."""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-    video_duration = get_video_duration(video_url)
+    """Simulate increasing video views with human-like patterns."""
     for i in range(views_count):
         try:
-            # محاكاة إنشاء حساب للمستخدم عند أول مشاهدة
+            headers = {"User-Agent": choice(USER_AGENTS)}
             create_account_for_viewer(chat_id)
             response = requests.get(video_url, headers=headers)
             if response.status_code == 200:
-                print(f"✅ تمت مشاهدة الفيديو ({i + 1}/{views_count})")
-                time.sleep(video_duration)  # الانتظار لمدة الفيديو
+                print(f"View {i + 1}/{views_count} successful.")
+                send_message(chat_id, f"View {i + 1} completed.")
+                human_like_delay(get_video_duration(video_url))
             else:
-                print(f"❌ فشل تحميل الفيديو. رمز الحالة: {response.status_code}")
+                print(f"Failed to view video. Status code: {response.status_code}")
         except Exception as e:
-            print(f"❌ خطأ أثناء زيادة المشاهدات ({i + 1}): {e}")
+            print(f"Error during view {i + 1}: {e}")
 
 @app.route(f"/{API_TOKEN}", methods=["POST"])
 def webhook():
-    """معالجة الرسائل الواردة من Telegram."""
+    """Handle Telegram webhook."""
     data = request.get_json()
     if not data or "message" not in data:
-        return "No message data", 400
+        return "Invalid data", 400
 
     chat_id = data["message"]["chat"]["id"]
     text = data["message"].get("text", "").strip()
 
     if text.startswith("/start"):
-        send_message(chat_id, "مرحبًا! أرسل رابط الفيديو وعدد المشاهدات المطلوبة بصيغة:\n`رابط_الفيديو عدد_المشاهدات`\nمثال:\n`https://www.youtube.com/watch?v=example 100`")
-    elif "youtube.com" in text or "youtu.be" in text:
+        send_message(chat_id, "Welcome! Send the video URL and desired view count in the format:\n`<video_url> <view_count>`")
+    elif re.match(r"(https?://)?(www\.)?(instagram\.com/p/|youtu\.be/|youtube\.com/watch\?v=)[\w-]+", text):
         try:
-            # استخدام regex للتحقق من صحة الرابط
-            parts = text.split(maxsplit=1)
-            if len(parts) != 2:
-                raise ValueError("صيغة غير صحيحة! تأكد من إرسال الرابط مع عدد المشاهدات.")
-
-            video_url, views_count = parts
-            if not re.match(r"(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/)[\w-]+", video_url):
-                raise ValueError("الرابط غير صالح! تأكد من استخدام رابط يوتيوب صحيح.")
-
+            video_url, views_count = text.rsplit(maxsplit=1)
             views_count = int(views_count)
             if views_count <= 0:
-                raise ValueError("عدد المشاهدات يجب أن يكون رقمًا صحيحًا أكبر من 0.")
-
-            send_message(chat_id, f"✅ تم بدء زيادة المشاهدات على الفيديو:\n{video_url}\n📈 العدد المطلوب: {views_count}")
-
-            # تشغيل عملية المشاهدات في Thread لتجنب تعليق الخادم
+                raise ValueError("Views count must be positive.")
+            send_message(chat_id, f"Starting to increase views for:\n{video_url}\nTarget: {views_count} views.")
             Thread(target=increase_views, args=(video_url, views_count, chat_id)).start()
-        except ValueError as ve:
-            send_message(chat_id, f"❌ خطأ في الصيغة: {ve}")
         except Exception as e:
-            send_message(chat_id, f"❌ حدث خطأ: {e}")
+            send_message(chat_id, f"Error processing request: {e}")
     else:
-        send_message(chat_id, "❌ صيغة غير صحيحة! أرسل رابط الفيديو وعدد المشاهدات المطلوبة.")
+        send_message(chat_id, "Invalid input! Please send a valid video URL and view count.")
 
     return "OK", 200
 
 if __name__ == "__main__":
-    print(f"✅ بدء تشغيل التطبيق على المنفذ {PORT}...")
-    set_webhook()  # إعداد Webhook عند بدء التشغيل
+    print(f"Starting app on port {PORT}...")
+    set_webhook()
     app.run(host="0.0.0.0", port=PORT)
