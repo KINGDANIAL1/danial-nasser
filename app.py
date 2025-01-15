@@ -27,6 +27,9 @@ def set_webhook():
 
 def send_message(chat_id, text, reply_markup=None):
     """إرسال رسالة إلى مستخدم Telegram مع زر إيقاف تشغيل."""
+    if not text.strip():
+        print("❌ النص المرسل إلى Telegram فارغ.")
+        return
     url = f"https://api.telegram.org/bot{API_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown", "reply_markup": reply_markup}
     try:
