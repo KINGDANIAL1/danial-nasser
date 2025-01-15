@@ -29,9 +29,6 @@ def send_message(chat_id, text, reply_markup=None):
     url = f"https://api.telegram.org/bot{API_TOKEN}/sendMessage"
     payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown", "reply_markup": reply_markup}
     
-    # إضافة سجل لتتبع البيانات المرسلة
-    print(f"Sending message to chat_id {chat_id} with payload: {payload}")  # سجل لعرض البيانات المرسلة
-    
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
@@ -40,11 +37,11 @@ def send_message(chat_id, text, reply_markup=None):
         print(f"❌ Failed to send message: {e}")
 
 def get_video_duration(video_url):
-    return 600
+    return 600  # يمكن تغيير هذه القيمة حسب مدة الفيديو الفعلية
 
 def skip_advertisement():
     print("⏩ Skipping advertisement...")
-    time.sleep(30)
+    time.sleep(5)  # تأخير لتخطي الإعلان
 
 def increase_views(video_url, views_count, chat_id):
     headers = {"User-Agent": "Mozilla/5.0"}
