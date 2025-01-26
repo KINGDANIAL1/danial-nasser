@@ -1,4 +1,4 @@
-ز# path: webhook_service.py
+# path: webhook_service.py
 
 import os
 import re
