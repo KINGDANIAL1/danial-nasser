@@ -1,3 +1,4 @@
-flask
-requests
-gunicorn
+instagrapi
+google-api-python-client
+google-auth
+schedule
